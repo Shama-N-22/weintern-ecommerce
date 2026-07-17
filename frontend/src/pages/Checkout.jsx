@@ -1,76 +1,111 @@
+import { useState } from "react";
+
 function Checkout() {
+  const [formData, setFormData] = useState({
+    fullName: "",
+    mobile: "",
+    address: "",
+  });
+
+  const [message, setMessage] = useState("");
+
+  const cartItems =
+    JSON.parse(localStorage.getItem("cartItems")) || [
+      {
+        id: 1,
+        name: "Apple iPhone 15",
+        price: 69999,
+        quantity: 1,
+      },
+    ];
+
+  const totalAmount = cartItems.reduce(
+    (total, item) => total + item.price * item.quantity,
+    0
+  );
+
+  const handleChange = (event) => {
+    const { name, value } = event.target;
+
+    setFormData((previousData) => ({
+      ...previousData,
+      [name]: value,
+    }));
+  };
+
+  const handlePlaceOrder = (event) => {
+    event.preventDefault();
+
+    if (
+      formData.fullName.trim() === "" ||
+      formData.mobile.trim() === "" ||
+      formData.address.trim() === ""
+    ) {
+      setMessage("Please fill all details.");
+      return;
+    }
+
+    if (formData.mobile.length !== 10) {
+      setMessage("Please enter a valid 10-digit mobile number.");
+      return;
+    }
+
+    const orderData = {
+      id: Date.now(),
+      customer: formData,
+      items: cartItems,
+      totalAmount,
+      status: "Placed",
+    };
+
+    localStorage.setItem("latestOrder", JSON.stringify(orderData));
+    localStorage.removeItem("cartItems");
+
+    setMessage("Order placed successfully!");
+
+    setTimeout(() => {
+      window.location.href = "/order-success";
+    }, 1000);
+  };
+
   return (
-    <div>
-      <h1>💳 Checkout</h1>
+    <div className="page-container">
+      <h1>Checkout</h1>
 
-      <div
-        style={{
-          border: "1px solid #ccc",
-          padding: "20px",
-          borderRadius: "10px",
-          width: "400px",
-          marginTop: "20px",
-        }}
-      >
-        <h3>Delivery Details</h3>
-
+      <form onSubmit={handlePlaceOrder} className="checkout-form">
         <input
           type="text"
+          name="fullName"
           placeholder="Full Name"
-          style={styles.input}
+          value={formData.fullName}
+          onChange={handleChange}
         />
 
         <input
-          type="text"
+          type="number"
+          name="mobile"
           placeholder="Mobile Number"
-          style={styles.input}
+          value={formData.mobile}
+          onChange={handleChange}
         />
 
         <textarea
+          name="address"
           placeholder="Delivery Address"
-          style={styles.textarea}
-        ></textarea>
+          value={formData.address}
+          onChange={handleChange}
+        />
 
-        <h3>Total Amount: ₹69,999</h3>
+        <h2>
+          Total Amount: ₹{totalAmount.toLocaleString("en-IN")}
+        </h2>
 
-        <button style={styles.button}>
-          Place Order
-        </button>
-      </div>
+        {message && <p>{message}</p>}
+
+        <button type="submit">Place Order</button>
+      </form>
     </div>
   );
 }
-
-const styles = {
-  input: {
-    width: "100%",
-    padding: "10px",
-    marginBottom: "10px",
-    border: "1px solid #ccc",
-    borderRadius: "5px",
-    fontSize: "16px",
-  },
-
-  textarea: {
-    width: "100%",
-    height: "100px",
-    padding: "10px",
-    marginBottom: "15px",
-    border: "1px solid #ccc",
-    borderRadius: "5px",
-    fontSize: "16px",
-  },
-
-  button: {
-    background: "#2874f0",
-    color: "white",
-    border: "none",
-    padding: "12px 20px",
-    borderRadius: "5px",
-    cursor: "pointer",
-    fontSize: "16px",
-    fontWeight: "bold",
-  },
-};
 
 export default Checkout;
