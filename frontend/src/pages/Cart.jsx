@@ -1,34 +1,46 @@
+import { useEffect, useState } from "react";
+
 function Cart() {
+  const [cartItems, setCartItems] = useState([]);
+
+  useEffect(() => {
+    const savedCart =
+      JSON.parse(localStorage.getItem("cartItems")) || [];
+
+    setCartItems(savedCart);
+  }, []);
+
+  const removeFromCart = (id) => {
+    const updatedCart = cartItems.filter(
+      (item) => item.id !== id
+    );
+
+    setCartItems(updatedCart);
+    localStorage.setItem(
+      "cartItems",
+      JSON.stringify(updatedCart)
+    );
+  };
+
   return (
-    <div>
+    <div className="page-container">
       <h1>Shopping Cart</h1>
 
-      <div
-        style={{
-          border: "1px solid #ccc",
-          padding: "20px",
-          borderRadius: "10px",
-          marginTop: "20px",
-          width: "350px",
-        }}
-      >
-        <h3>Apple iPhone 15</h3>
-        <p>Price: ₹69,999</p>
-        <p>Quantity: 1</p>
+      {cartItems.length === 0 ? (
+        <h2>Your cart is empty</h2>
+      ) : (
+        cartItems.map((item) => (
+          <div className="product-card" key={item.id}>
+            <h2>{item.name}</h2>
+            <p>Price: ₹{item.price.toLocaleString("en-IN")}</p>
+            <p>Quantity: {item.quantity}</p>
 
-        <button
-          style={{
-            padding: "10px 20px",
-            background: "#2874f0",
-            color: "white",
-            border: "none",
-            borderRadius: "5px",
-            cursor: "pointer",
-          }}
-        >
-          Remove
-        </button>
-      </div>
+            <button onClick={() => removeFromCart(item.id)}>
+              Remove
+            </button>
+          </div>
+        ))
+      )}
     </div>
   );
 }

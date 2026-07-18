@@ -1,37 +1,27 @@
 function OrderSuccess() {
+  const order = JSON.parse(localStorage.getItem("latestOrder"));
+
+  if (!order) {
+    return (
+      <div className="page-container">
+        <h1>No order found</h1>
+      </div>
+    );
+  }
+
   return (
-    <div
-      style={{
-        textAlign: "center",
-        marginTop: "80px",
-      }}
-    >
-      <h1 style={{ color: "green" }}>
-        ✅ Order Placed Successfully!
-      </h1>
+    <div className="page-container">
+      <h1>✅ Order Placed Successfully</h1>
 
-      <h2>Thank You for Shopping 🛍</h2>
+      <h2>Thank you, {order.customer.fullName}</h2>
 
-      <p>Your order has been placed successfully.</p>
-
+      <p>Order ID: {order.id}</p>
+      <p>Mobile: {order.customer.mobile}</p>
+      <p>Address: {order.customer.address}</p>
       <p>
-        Order ID: <strong>#WE123456</strong>
+        Total Amount: ₹
+        {order.totalAmount.toLocaleString("en-IN")}
       </p>
-
-      <button
-        style={{
-          marginTop: "20px",
-          padding: "12px 25px",
-          background: "#2874f0",
-          color: "white",
-          border: "none",
-          borderRadius: "5px",
-          cursor: "pointer",
-          fontSize: "16px",
-        }}
-      >
-        Continue Shopping
-      </button>
     </div>
   );
 }
