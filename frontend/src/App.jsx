@@ -1,28 +1,74 @@
-import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
+import { useState } from "react";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "./context/AuthContext";
+import ProtectedRoute from "./components/ProtectedRoute";
+import SplashScreen from "./components/SplashScreen";
+import Navbar from "./components/Navbar";
+
+import Home from "./pages/Home";
+import Shop from "./pages/Shop";
+import Compare from "./pages/Compare";
+import TechLab from "./pages/TechLab";
+import About from "./pages/About";
+import Contact from "./pages/Contact";
 import Cart from "./pages/Cart";
 import Wishlist from "./pages/Wishlist";
 import Checkout from "./pages/Checkout";
 import OrderSuccess from "./pages/OrderSuccess";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import Profile from "./pages/Profile";
+
 import "./App.css";
 
 function App() {
-  return (
-    <BrowserRouter>
-      <nav>
-        <Link to="/cart">Cart</Link>
-        <Link to="/wishlist">Wishlist</Link>
-        <Link to="/checkout">Checkout</Link>
-        <Link to="/order-success">Order Success</Link>
-      </nav>
+  const [showSplash, setShowSplash] = useState(
+    () => !sessionStorage.getItem("splashShown")
+  );
 
-      <Routes>
-        <Route path="/" element={<Cart />} />
-        <Route path="/cart" element={<Cart />} />
-        <Route path="/wishlist" element={<Wishlist />} />
-        <Route path="/checkout" element={<Checkout />} />
-        <Route path="/order-success" element={<OrderSuccess />} />
-      </Routes>
-    </BrowserRouter>
+  const finishSplash = () => {
+    sessionStorage.setItem("splashShown", "true");
+    setShowSplash(false);
+  };
+
+  if (showSplash) {
+    return <SplashScreen onFinish={finishSplash} />;
+  }
+
+  return (
+    <AuthProvider>
+      <BrowserRouter>
+        <div className="grain-overlay" />
+        <div className="smoke-layer">
+          <span className="smoke-blob smoke-blob-1" />
+          <span className="smoke-blob smoke-blob-2" />
+        </div>
+        <Navbar />
+
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/shop" element={<Shop />} />
+          <Route path="/compare" element={<Compare />} />
+          <Route path="/tech-lab" element={<TechLab />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/cart" element={<Cart />} />
+          <Route path="/wishlist" element={<Wishlist />} />
+          <Route path="/checkout" element={<Checkout />} />
+          <Route path="/order-success" element={<OrderSuccess />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <Profile />
+              </ProtectedRoute>
+            }
+          />
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
   );
 }
 
