@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
-import products from "../data/products";
+import { fetchProducts } from "../services/productService";
 import ScoreRing from "../components/ScoreRing";
 import BuildAnimation from "../components/BuildAnimation";
 import { playSelectSound, playSuccessSound } from "../components/soundEffects";
@@ -146,7 +146,7 @@ function ProductDropdown({ category, options, selected, onSelect }) {
 /* ============================================================
    Dream Setup — the full AI Advisor experience
    ============================================================ */
-function DreamSetupAdvisor() {
+function DreamSetupAdvisor({ products }) {
   const [selection, setSelection] = useState({});
   const [budget, setBudget] = useState(150000);
   const [mood, setMood] = useState(MOODS[0]);
@@ -567,7 +567,7 @@ function FpsEstimator() {
   );
 }
 
-function LaptopFinder() {
+function LaptopFinder({ products }) {
   const [budget, setBudget] = useState(80000);
   const laptops = products.filter((p) => p.category === "Laptops");
   const best = laptops.filter((p) => p.price <= budget).sort((a, b) => b.price - a.price)[0];
@@ -655,6 +655,13 @@ function PersonalityQuiz() {
    ============================================================ */
 function TechLab() {
   const [tab, setTab] = useState(TABS[0]);
+  const [products, setProducts] = useState([]);
+
+  useEffect(() => {
+    fetchProducts()
+      .then(setProducts)
+      .catch((err) => console.error("Failed to load products:", err));
+  }, []);
 
   return (
     <div className="page-container">
@@ -673,9 +680,9 @@ function TechLab() {
       </div>
 
       <AnimatePresence mode="wait">
-        {tab === "Dream Setup" && <motion.div key="setup" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}><DreamSetupAdvisor /></motion.div>}
+        {tab === "Dream Setup" && <motion.div key="setup" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}><DreamSetupAdvisor products={products} /></motion.div>}
         {tab === "FPS Estimator" && <motion.div key="fps" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}><FpsEstimator /></motion.div>}
-        {tab === "Laptop Finder" && <motion.div key="finder" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}><LaptopFinder /></motion.div>}
+        {tab === "Laptop Finder" && <motion.div key="finder" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}><LaptopFinder products={products} /></motion.div>}
         {tab === "Personality Quiz" && <motion.div key="quiz" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}><PersonalityQuiz /></motion.div>}
       </AnimatePresence>
     </div>

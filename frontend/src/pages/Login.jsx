@@ -15,9 +15,18 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+
+    const trimmedEmail = email.trim();
+    const trimmedPassword = password.trim();
+
+    if (!trimmedEmail || !trimmedPassword) {
+      setError("Please enter both your email and password.");
+      return;
+    }
+
     setSubmitting(true);
     try {
-      await login(email, password);
+      await login(trimmedEmail, trimmedPassword);
       navigate("/");
     } catch (err) {
       setError(err.response?.data?.message || "Login failed. Please try again.");
@@ -28,7 +37,7 @@ const Login = () => {
 
   return (
     <div className="auth-form-container">
-      <form className="auth-form" onSubmit={handleSubmit}>
+      <form className="auth-form" onSubmit={handleSubmit} autoComplete="off">
         <h2>Log In</h2>
 
         {error && <p className="auth-error">{error}</p>}
@@ -39,6 +48,7 @@ const Login = () => {
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
+          autoComplete="off"
           required
         />
 
@@ -48,6 +58,7 @@ const Login = () => {
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
+          autoComplete="new-password"
           required
         />
 

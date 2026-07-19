@@ -13,18 +13,14 @@ const getCart = async (req, res) => {
       });
     }
 
-    let cart = await Cart.findOne({ user: userId }).populate(
-      "items.product",
-      "name price image"
-    );
-
-    if (!cart) {
-      cart = await Cart.create({
-        user: userId,
-        items: [],
-        totalAmount: 0,
-      });
-    }
+    // Atomic get-or-create: avoids a race where two requests both try to
+    // create a cart for the same user at once and collide on the unique
+    // index (that collision was showing up as "Unable to fetch cart").
+    const cart = await Cart.findOneAndUpdate(
+      { user: userId },
+      { $setOnInsert: { user: userId, items: [], totalAmount: 0 } },
+      { upsert: true, new: true }
+    ).populate("items.product", "name price image");
 
     res.status(200).json({
       success: true,
@@ -61,14 +57,12 @@ const addToCart = async (req, res) => {
       });
     }
 
-    let cart = await Cart.findOne({ user: userId });
-
-    if (!cart) {
-      cart = new Cart({
-        user: userId,
-        items: [],
-      });
-    }
+    // Same atomic get-or-create as getCart, for the same reason.
+    let cart = await Cart.findOneAndUpdate(
+      { user: userId },
+      { $setOnInsert: { user: userId, items: [] } },
+      { upsert: true, new: true }
+    );
 
     const existingItem = cart.items.find(
       (item) => item.product.toString() === productId

@@ -36,10 +36,8 @@ export function metaFor(item) {
   const rating = Math.round((3.8 + seeded(item.id, 1) * 1.2) * 10) / 10;
   const reviewCount = Math.round(20 + seeded(item.id, 2) * 480);
   const discountPercent = Math.round(seeded(item.id, 3) * 25);
-  // Use the REAL stock number from the database now that we have one,
-  // instead of a fake random roll.
-  const realStock = typeof item.stock === "number" ? item.stock : 20;
-  const stock = realStock === 0 ? "Out of Stock" : realStock <= 5 ? "Limited Stock" : "In Stock";
+  const stockRoll = seeded(item.id, 4);
+  const stock = stockRoll > 0.85 ? "Limited Stock" : stockRoll > 0.1 ? "In Stock" : "Out of Stock";
   const deliveryDays = 2 + Math.round(seeded(item.id, 5) * 3);
   const emiMonthly = Math.round(item.price / 12);
 

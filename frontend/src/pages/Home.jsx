@@ -1,10 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { Link } from "react-router-dom";
-import products from "../data/products";
+import { Link, useNavigate } from "react-router-dom";
+import { fetchProducts } from "../services/productService";
+import { addToCart as addToCartAPI } from "../services/cartService";
 import ProductModal from "../components/ProductModal";
-
-const PARTICLE_COUNT = 18;
 
 const funFacts = [
   "The first computer mouse was carved out of wood in 1964.",
@@ -14,19 +13,22 @@ const funFacts = [
   "The QWERTY keyboard layout was designed to slow typists down and prevent mechanical jams.",
 ];
 
-const upcomingDeals = [
-  { title: "Gaming Week", date: "Starts in 3 days", desc: "Up to 25% off PCs & monitors" },
-  { title: "Audio Fest", date: "Starts in 6 days", desc: "Buy one, get 30% off a second pair" },
-  { title: "Back to Campus", date: "Starts in 10 days", desc: "Student pricing on laptops" },
-];
-
 function Home() {
   const heroRef = useRef(null);
   const [glowPos, setGlowPos] = useState({ x: 50, y: 50 });
   const [factIndex, setFactIndex] = useState(0);
   const [activeProduct, setActiveProduct] = useState(null);
-  const recentlyViewed = JSON.parse(localStorage.getItem("recentlyViewed")) || [];
   const [showRecentlyViewed, setShowRecentlyViewed] = useState(false);
+  const [products, setProducts] = useState([]);
+  const navigate = useNavigate();
+
+  const recentlyViewed = JSON.parse(localStorage.getItem("recentlyViewed")) || [];
+
+  useEffect(() => {
+    fetchProducts()
+      .then(setProducts)
+      .catch((err) => console.error("Failed to load products:", err));
+  }, []);
 
   useEffect(() => {
     const el = heroRef.current;
@@ -45,23 +47,25 @@ function Home() {
 
   const nextFact = () => setFactIndex((prev) => (prev + 1) % funFacts.length);
 
-  const addToCart = (item, opts = {}) => {
-    const savedCart = JSON.parse(localStorage.getItem("cartItems")) || [];
-    const alreadyExists = savedCart.find(
-      (cartItem) => cartItem.id === item.id && cartItem.color === item.color
-    );
-    let updatedCart;
-    if (alreadyExists) {
-      updatedCart = savedCart.map((cartItem) =>
-        cartItem.id === item.id && cartItem.color === item.color
-          ? { ...cartItem, quantity: cartItem.quantity + 1 }
-          : cartItem
-      );
-    } else {
-      updatedCart = [...savedCart, { ...item, quantity: 1 }];
+  const addToCart = async (item, opts = {}) => {
+    const user = JSON.parse(localStorage.getItem("user"));
+    if (!user) {
+      alert("Please log in to add items to your cart.");
+      navigate("/login");
+      return;
     }
-    localStorage.setItem("cartItems", JSON.stringify(updatedCart));
-    if (!opts.silent) alert(`${item.name} added to cart`);
+    try {
+      await addToCartAPI(item.id, 1);
+      if (!opts.silent) alert(`${item.name} added to cart`);
+    } catch (err) {
+      alert(err.response?.data?.message || "Failed to add to cart");
+    }
+  };
+
+  const trackRecentlyViewed = (item) => {
+    const recent = JSON.parse(localStorage.getItem("recentlyViewed")) || [];
+    const updated = [item, ...recent.filter((p) => p.id !== item.id)].slice(0, 4);
+    localStorage.setItem("recentlyViewed", JSON.stringify(updated));
   };
 
   return (
@@ -71,7 +75,7 @@ function Home() {
         <div className="hero-glow" style={{ left: `${glowPos.x}%`, top: `${glowPos.y}%` }} />
 
         <div className="particles">
-          {Array.from({ length: PARTICLE_COUNT }).map((_, i) => (
+          {Array.from({ length: 18 }).map((_, i) => (
             <span
               key={i}
               className="particle"
@@ -114,7 +118,7 @@ function Home() {
         </p>
         <div className="story-stats">
           <div className="story-stat">
-            <span className="story-stat-number">30+</span>
+            <span className="story-stat-number">50+</span>
             <span className="story-stat-label">Products tested in-house</span>
           </div>
           <div className="story-stat">
@@ -149,37 +153,15 @@ function Home() {
         viewport={{ once: true, amount: 0.2 }}
         transition={{ duration: 0.7 }}
       >
-        <h1 className="rail-title">Upcoming Deals</h1>
-        <div className="upcoming-grid">
-          {upcomingDeals.map((deal) => (
-            <div className="upcoming-card" key={deal.title}>
-              <span className="upcoming-date">{deal.date}</span>
-              <h2>{deal.title}</h2>
-              <p>{deal.desc}</p>
-            </div>
-          ))}
-        </div>
-      </motion.section>
-
-      <motion.section
-        className="rail-section"
-        initial={{ opacity: 0, y: 30 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, amount: 0.2 }}
-        transition={{ duration: 0.7 }}
-      >
         <h1 className="rail-title">Trending Now</h1>
         <div className="product-rail">
           {products.slice(0, 10).map((item) => (
             <div className="rail-item" key={item.id}>
-              <div className="product-card" onClick={() => setActiveProduct(item)}>
-                <div className="product-card-media">
-                  <img src={item.image} alt={item.name} className="product-image" />
-                  <div className="product-card-overlay">
-                    <span>View Product →</span>
-                  </div>
-                </div>
-                <span className="product-category">{item.category}</span>
+              <div
+                className="product-card"
+                onClick={() => { trackRecentlyViewed(item); setActiveProduct(item); }}
+              >
+                <img src={item.image} alt={item.name} className="product-image" />
                 <h2>{item.name}</h2>
                 <span className="price-tag">₹{item.price.toLocaleString("en-IN")}</span>
               </div>
@@ -226,9 +208,6 @@ function Home() {
           <p>{funFacts[factIndex]}</p>
           <span className="fun-hint">Tap for another one →</span>
         </div>
-        <Link to="/tech-lab" className="btn btn-outline" style={{ marginTop: 20 }}>
-          Explore Tech Lab →
-        </Link>
       </motion.section>
 
       <ProductModal

@@ -35,12 +35,14 @@ const userSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Hash password before saving, only if it was modified
-userSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) return next();
+// Hash password before saving, only if it was modified.
+// NOTE: this is an async function, so Mongoose does NOT pass a `next`
+// callback — mixing async + next() is what was causing every registration
+// to crash with "next is not a function". Just await and return instead.
+userSchema.pre("save", async function () {
+  if (!this.isModified("password")) return;
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
-  next();
 });
 
 // Instance method to compare entered password with hashed password

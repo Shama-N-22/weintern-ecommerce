@@ -1,7 +1,7 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import products from "../data/products";
+import { fetchProducts } from "../services/productService";
 import ScoreRing from "../components/ScoreRing";
 import AccordionCard from "../components/AccordionCard";
 import RadarChart from "../components/RadarChart";
@@ -32,6 +32,16 @@ const PERSONA_WEIGHTS = {
 
 function Compare() {
   const compareIds = JSON.parse(localStorage.getItem("compareItems")) || [];
+  const [products, setProducts] = useState([]);
+  const [loadingProducts, setLoadingProducts] = useState(true);
+
+  useEffect(() => {
+    fetchProducts()
+      .then(setProducts)
+      .catch((err) => console.error("Failed to load products:", err))
+      .finally(() => setLoadingProducts(false));
+  }, []);
+
   const items = products.filter((p) => compareIds.includes(p.id));
 
   const [diffOnly, setDiffOnly] = useState(false);
@@ -47,6 +57,15 @@ function Compare() {
     localStorage.removeItem("compareItems");
     window.location.reload();
   };
+
+  if (loadingProducts) {
+    return (
+      <div className="page-container">
+        <h1>Compare Products</h1>
+        <h2 className="empty-state">Loading products…</h2>
+      </div>
+    );
+  }
 
   if (items.length === 0) {
     return (

@@ -18,6 +18,16 @@ const Register = () => {
     e.preventDefault();
     setError("");
 
+    if (!name.trim() || !email.trim() || !password.trim()) {
+      setError("Please fill in all fields.");
+      return;
+    }
+
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters.");
+      return;
+    }
+
     if (password !== confirmPassword) {
       setError("Passwords do not match");
       return;
@@ -25,10 +35,16 @@ const Register = () => {
 
     setSubmitting(true);
     try {
-      await register(name, email, password);
+      await register(name.trim(), email.trim(), password);
       navigate("/");
     } catch (err) {
-      setError(err.response?.data?.message || "Registration failed. Please try again.");
+      const backendMessage = err.response?.data?.message;
+      const backendError = err.response?.data?.error;
+      const networkIssue = err.message === "Network Error"
+        ? "Can't reach the backend — is it running on port 5000?"
+        : null;
+      setError(backendMessage || backendError || networkIssue || "Registration failed. Please try again.");
+      console.error("Register error:", err.response?.data || err.message);
     } finally {
       setSubmitting(false);
     }
@@ -36,7 +52,7 @@ const Register = () => {
 
   return (
     <div className="auth-form-container">
-      <form className="auth-form" onSubmit={handleSubmit}>
+      <form className="auth-form" onSubmit={handleSubmit} autoComplete="off">
         <h2>Create Account</h2>
 
         {error && <p className="auth-error">{error}</p>}
@@ -47,6 +63,7 @@ const Register = () => {
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value)}
+          autoComplete="off"
           required
         />
 
@@ -56,6 +73,7 @@ const Register = () => {
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
+          autoComplete="off"
           required
         />
 
@@ -66,6 +84,7 @@ const Register = () => {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           minLength={6}
+          autoComplete="new-password"
           required
         />
 
@@ -76,6 +95,7 @@ const Register = () => {
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
           minLength={6}
+          autoComplete="new-password"
           required
         />
 

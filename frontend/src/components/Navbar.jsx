@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 function CartIcon() {
   return (
@@ -42,6 +43,7 @@ function Navbar() {
   const isHome = pathname === "/";
   const [scrolled, setScrolled] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const { isAuthenticated, isAdmin } = useAuth();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40);
@@ -71,6 +73,12 @@ function Navbar() {
         <NavLink to="/tech-lab" className="nav-link">AI Advisor</NavLink>
         <NavLink to="/about" className="nav-link">About</NavLink>
         <NavLink to="/contact" className="nav-link">Contact</NavLink>
+        {isAuthenticated && (
+          <NavLink to="/my-orders" className="nav-link">My Orders</NavLink>
+        )}
+        {isAdmin && (
+          <NavLink to="/admin" className="nav-link">Admin</NavLink>
+        )}
       </div>
 
       <div className="navbar-actions">
@@ -95,7 +103,7 @@ function Navbar() {
         <NavLink to="/cart" className="nav-icon-btn" aria-label="Cart">
           <CartIcon />
         </NavLink>
-        <NavLink to="/profile" className="nav-icon-btn" aria-label="Account">
+        <NavLink to={isAuthenticated ? "/profile" : "/login"} className="nav-icon-btn" aria-label="Account">
           <UserIcon />
         </NavLink>
       </div>

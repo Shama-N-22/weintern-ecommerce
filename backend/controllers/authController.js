@@ -12,12 +12,22 @@ const registerUser = async (req, res) => {
       return res.status(400).json({ message: "Please fill in all fields" });
     }
 
-    const userExists = await User.findOne({ email });
-    if (userExists) {
-      return res.status(400).json({ message: "User already exists" });
+    if (password.length < 6) {
+      return res.status(400).json({ message: "Password must be at least 6 characters" });
     }
 
-    const user = await User.create({ name, email, password });
+    const normalizedEmail = email.trim().toLowerCase();
+
+    const userExists = await User.findOne({ email: normalizedEmail });
+    if (userExists) {
+      return res.status(400).json({ message: "An account with this email already exists" });
+    }
+
+    const user = await User.create({
+      name: name.trim(),
+      email: normalizedEmail,
+      password,
+    });
 
     res.status(201).json({
       _id: user._id,
@@ -27,7 +37,17 @@ const registerUser = async (req, res) => {
       token: generateToken(user._id, user.role),
     });
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    console.error("registerUser error:", error);
+    // Mongoose validation errors (e.g. failed schema rules) land here —
+    // surface the real reason instead of a generic 500.
+    if (error.name === "ValidationError") {
+      const firstMessage = Object.values(error.errors)[0]?.message || "Invalid input";
+      return res.status(400).json({ message: firstMessage });
+    }
+    if (error.code === 11000) {
+      return res.status(400).json({ message: "An account with this email already exists" });
+    }
+    res.status(500).json({ message: error.message || "Server error", error: error.message });
   }
 };
 
@@ -42,8 +62,10 @@ const loginUser = async (req, res) => {
       return res.status(400).json({ message: "Please provide email and password" });
     }
 
+    const normalizedEmail = email.trim().toLowerCase();
+
     // password is select:false in the model, so explicitly include it here
-    const user = await User.findOne({ email }).select("+password");
+    const user = await User.findOne({ email: normalizedEmail }).select("+password");
 
     if (user && (await user.matchPassword(password))) {
       res.json({
@@ -57,7 +79,8 @@ const loginUser = async (req, res) => {
       res.status(401).json({ message: "Invalid email or password" });
     }
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    console.error("loginUser error:", error);
+    res.status(500).json({ message: error.message || "Server error", error: error.message });
   }
 };
 

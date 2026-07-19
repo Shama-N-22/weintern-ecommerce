@@ -1,8 +1,7 @@
 import axios from "axios";
+import { API_BASE } from "./apiConfig";
 
-// Change this if your backend runs on a different port/URL,
-// ideally pull from an env variable once the group agrees on one.
-const API_URL = "http://localhost:5000/api/auth";
+const API_URL = `${API_BASE}/auth`;
 
 const register = async (name, email, password) => {
   const res = await axios.post(`${API_URL}/register`, { name, email, password });

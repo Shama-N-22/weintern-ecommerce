@@ -46,13 +46,13 @@ function ProductModal({ item, onClose, onAddToCart }) {
     localStorage.setItem("wishlistItems", JSON.stringify(updated));
   };
 
-  const handleAddToCart = () => {
-    onAddToCart({ ...item, color: selectedColor });
+  const handleAddToCart = async () => {
+    await onAddToCart({ ...item, color: selectedColor });
     onClose();
   };
 
-  const handleBuyNow = () => {
-    onAddToCart({ ...item, color: selectedColor }, { silent: true });
+  const handleBuyNow = async () => {
+    await onAddToCart({ ...item, color: selectedColor }, { silent: true });
     onClose();
     navigate("/checkout");
   };

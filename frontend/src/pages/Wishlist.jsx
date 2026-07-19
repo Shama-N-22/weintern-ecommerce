@@ -1,37 +1,30 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { addToCart as addToCartAPI } from "../services/cartService";
 
 function Wishlist() {
   const [wishlistItems, setWishlistItems] = useState([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const saved = JSON.parse(localStorage.getItem("wishlistItems")) || [];
     setWishlistItems(saved);
   }, []);
 
-  const addToCart = (item) => {
-    const savedCart = JSON.parse(localStorage.getItem("cartItems")) || [];
-    const alreadyExists = savedCart.find(
-      (cartItem) => cartItem.id === item.id && cartItem.color === item.color
-    );
-    let updatedCart;
-
-    if (alreadyExists) {
-      updatedCart = savedCart.map((cartItem) =>
-        cartItem.id === item.id && cartItem.color === item.color
-          ? { ...cartItem, quantity: cartItem.quantity + 1 }
-          : cartItem
-      );
-    } else {
-      updatedCart = [
-        ...savedCart,
-        { ...item, color: item.colors ? item.colors[0] : undefined, quantity: 1 },
-      ];
+  const addToCart = async (item) => {
+    const user = JSON.parse(localStorage.getItem("user"));
+    if (!user) {
+      alert("Please log in to add items to your cart.");
+      navigate("/login");
+      return;
     }
-
-    localStorage.setItem("cartItems", JSON.stringify(updatedCart));
-    removeFromWishlist(item.id);
-    alert(`${item.name} added to cart`);
+    try {
+      await addToCartAPI(item.id, 1);
+      removeFromWishlist(item.id);
+      alert(`${item.name} added to cart`);
+    } catch (err) {
+      alert(err.response?.data?.message || "Failed to add to cart");
+    }
   };
 
   const removeFromWishlist = (id) => {
