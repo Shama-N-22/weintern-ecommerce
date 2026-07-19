@@ -4,6 +4,7 @@ import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import SplashScreen from "./components/SplashScreen";
 import Navbar from "./components/Navbar";
+import BackToTopRocket from "./components/BackToTopRocket";
 
 import Home from "./pages/Home";
 import Shop from "./pages/Shop";
@@ -44,6 +45,7 @@ function App() {
           <span className="smoke-blob smoke-blob-2" />
         </div>
         <Navbar />
+        <BackToTopRocket />
 
         <Routes>
           <Route path="/" element={<Home />} />

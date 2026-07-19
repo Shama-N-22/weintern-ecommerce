@@ -26,6 +26,7 @@ function Home() {
   const [factIndex, setFactIndex] = useState(0);
   const [activeProduct, setActiveProduct] = useState(null);
   const recentlyViewed = JSON.parse(localStorage.getItem("recentlyViewed")) || [];
+  const [showRecentlyViewed, setShowRecentlyViewed] = useState(false);
 
   useEffect(() => {
     const el = heroRef.current;
@@ -188,19 +189,27 @@ function Home() {
       </motion.section>
 
       {recentlyViewed.length > 0 && (
-        <section className="rail-section">
-          <h1 className="rail-title">Recently Viewed</h1>
-          <div className="product-rail">
-            {recentlyViewed.map((item) => (
-              <div className="rail-item" key={item.id}>
-                <div className="product-card" onClick={() => setActiveProduct(item)}>
-                  <img src={item.image} alt={item.name} className="product-image" />
-                  <h2>{item.name}</h2>
-                  <span className="price-tag">₹{item.price.toLocaleString("en-IN")}</span>
+        <section className="rail-section" style={{ paddingBottom: 20 }}>
+          <button
+            className="btn btn-outline recently-viewed-toggle"
+            onClick={() => setShowRecentlyViewed((prev) => !prev)}
+          >
+            {showRecentlyViewed ? "Hide Recently Viewed" : "Show Recently Viewed"}
+          </button>
+
+          {showRecentlyViewed && (
+            <div className="product-rail" style={{ marginTop: 18 }}>
+              {recentlyViewed.map((item) => (
+                <div className="rail-item" key={item.id}>
+                  <div className="product-card" onClick={() => setActiveProduct(item)}>
+                    <img src={item.image} alt={item.name} className="product-image" />
+                    <h2>{item.name}</h2>
+                    <span className="price-tag">₹{item.price.toLocaleString("en-IN")}</span>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </section>
       )}
 
