@@ -49,9 +49,35 @@ function Compare() {
   const [ownYears, setOwnYears] = useState(2);
   const [expandedBenchmarks, setExpandedBenchmarks] = useState(false);
 
-  const specsList = useMemo(() => items.map((i) => generateSpecs(i)), [items]);
-  const scoresList = useMemo(() => items.map((i) => overallScores(i)), [items]);
-  const benchmarksList = useMemo(() => items.map((i) => benchmarksFor(i)), [items]);
+  const [computeError, setComputeError] = useState("");
+
+  const specsList = useMemo(() => {
+    try {
+      return items.map((i) => generateSpecs(i));
+    } catch (err) {
+      console.error("generateSpecs failed:", err);
+      setComputeError("Something went wrong generating specs for these products.");
+      return [];
+    }
+  }, [items]);
+
+  const scoresList = useMemo(() => {
+    try {
+      return items.map((i) => overallScores(i));
+    } catch (err) {
+      console.error("overallScores failed:", err);
+      return [];
+    }
+  }, [items]);
+
+  const benchmarksList = useMemo(() => {
+    try {
+      return items.map((i) => benchmarksFor(i));
+    } catch (err) {
+      console.error("benchmarksFor failed:", err);
+      return [];
+    }
+  }, [items]);
 
   const clearCompare = () => {
     localStorage.removeItem("compareItems");
@@ -75,6 +101,21 @@ function Compare() {
           No products selected yet — go to the Shop page and check "Compare" on a few items.
         </h2>
         <Link to="/shop" className="btn btn-primary" style={{ marginTop: 16 }}>Go to Shop</Link>
+      </div>
+    );
+  }
+
+  if (computeError || specsList.length !== items.length) {
+    return (
+      <div className="page-container">
+        <h1>Compare Products</h1>
+        <h2 className="empty-state">
+          Something went wrong comparing these specific products. Try clearing the comparison and
+          selecting different ones.
+        </h2>
+        <button className="btn btn-outline" style={{ marginTop: 16 }} onClick={clearCompare}>
+          Clear comparison
+        </button>
       </div>
     );
   }

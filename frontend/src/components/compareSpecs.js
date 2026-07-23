@@ -3,8 +3,19 @@
 // product's price/category (same product always gets the same numbers,
 // they just aren't lab-measured). Clearly a demo, not real hardware data.
 
+function numericSeed(id) {
+  if (typeof id === "number") return id;
+  let hash = 0;
+  const str = String(id);
+  for (let i = 0; i < str.length; i++) {
+    hash = (hash * 31 + str.charCodeAt(i)) % 100000;
+  }
+  return hash;
+}
+
 function seeded(id, salt) {
-  const x = Math.sin(id * 999 + salt * 37) * 10000;
+  const n = numericSeed(id);
+  const x = Math.sin(n * 999 + salt * 37) * 10000;
   return x - Math.floor(x);
 }
 
